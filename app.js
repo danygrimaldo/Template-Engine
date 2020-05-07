@@ -12,12 +12,14 @@ const render = require("./lib/htmlRenderer");
 
 
 // Write code to use inquirer to gather information about the development team members,
+// and to create objects for each team member (using the correct classes as blueprints!)
 
 const questions = [
     {
         type: "input",
         name: "name",
-        message: "What is your full name (first and last)? "
+        message: "What is your full name (first and last)? ",
+        default: "Dany Grimaldo"
     },
     {
         type: "input",
@@ -36,14 +38,16 @@ const questions = [
         name: "role",
         message: "What is your role with the company?",
         choices: [Manager, Engineer, Intern]
-    }
+    },
+
 ];
 
 const managerQ = [
     {
         type: "input",
         name: "officeNumber",
-        message: "What is your office number? "
+        message: "What is your office number? ",
+        default: "678.123.4567"
     }
 ];
 
@@ -52,6 +56,7 @@ const engineerQ = [
         type: "input",
         name: "github",
         message: "What is your GitHub username? ",
+        default: "mygithub"
     }
 ];
 
@@ -60,23 +65,33 @@ const internQ = [
         type: "input",
         name: "school",
         message: "What school do you attend? ",
+        default: "University of Georgia"
     }
 ];
 
-// and to create objects for each team member (using the correct classes as blueprints!)
-
-// After the user has input all employees desired, call the `render` function (required
-
 async function init() {
     try {
-        const answers = await inquirer.prompt(questions);
+        const answers = await inquirer.prompt(questions)
+        if (answers.role === "Manager") {
+            const managerA = await inquirer.prompt(managerQ);
+            answers.officeNumber = managerA.officeNumber;
+        }
+        else if (answers.role === "Engineer") {
+            const engineerA = await inquirer.prompt(engineerQ);
+            answers.github = engineerA.github;
+        }
+        else if (answers.role === "Intern") {
+            const internA = await inquirer.prompt(internQ);
+            answers.school = internA.school;
+        }
         console.log(answers);
 
-        // above) and pass in an array containing all employee objects; the `render` function will
     } catch (err) {
         console.log(err);
     }
 }
+// After the user has input all employees desired, call the `render` function (required
+// above) and pass in an array containing all employee objects; the `render` function will
 // generate and return a block of HTML including templated divs for each employee!
 
 // After you have your html, you're now ready to create an HTML file using the HTML
