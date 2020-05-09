@@ -1,24 +1,19 @@
+//Global classes and requirements to run application
 const Manager = require("./lib/Manager");
 const Engineer = require("./lib/Engineer");
 const Intern = require("./lib/Intern");
 const inquirer = require("inquirer");
 const path = require("path");
 const fs = require("fs");
-const util = require("util");
+const render = require("./lib/htmlRenderer");
 
-const writeToFile = util.promisify(fs.writeFile);
-
+//Global Paths for execution
 const OUTPUT_DIR = path.resolve(__dirname, "output")
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
-const render = require("./lib/htmlRenderer");
 
-
-// Write code to use inquirer to gather information about the development team members,
-// and to create objects for each team member (using the correct classes as blueprints!)
-// HINT: each employee type (manager, engineer, or intern) has slightly different
-// information; write your code to ask different questions via inquirer depending on
-// employee type.
+// Use inquirer to gather information about the development team members,
+// some questions are customized to particular roles using 'when' arrow functions.
 function staffPrompts() {
     const questions = [
         {
@@ -77,59 +72,59 @@ function staffPrompts() {
     return teamMember;
 };
 
-// Hint: you may need to check if the `output` folder exists and create it if it
-// does not.
-function generateHTML(data) {
-    fs.access(OUTPUT_DIR, (err) => {
+// This function checks and/or creates a new directory for the output
+//and writes the file once directory returns true.
+function writeToFile(writeFolder, writePath, HTML) {
+    fs.access(writeFolder, (err) => {
         if (err) {
-            fs.mkdir(OUTPUT_DIR, (err) => {
+            fs.mkdir(writeFolder, (err) => {
                 if (err) throw err;
             });
         }
-        fs.writeFile(outputPath, data, (err) => {
+        fs.writeFile(writePath, HTML, (err) => {
             if (err) throw err;
         });
     });
-};
+}
 
 async function init() {
 
+    //empty array to store employees
     const employeesArray = [];
 
+    //Collect the specs based on user input and setting it into 'staffSpecs'
+    //as a variable. Then it pushes into the 'employees array'
     let staffSpecs = await staffPrompts();
     employeesArray.push(staffSpecs);
 
+    console.log(staffSpecs);
+
+    //As long as the user selectes to add more employees, it will continue to prompt and collect data,
+    //to then push into the employees array.
     while (staffSpecs.newMember) {
         staffSpecs = await staffPrompts();
         employeesArray.push(staffSpecs);
+
+        //a new array will be generted by taking each team member and setting them
+        //as new objeects within, according to their role.
     }
     const employees = employeesArray.map((teamMember) => {
         switch (teamMember.role) {
             case "Manager":
-                return new Manager(teamMember.name, teamMember.email, teamMember.id, teamMember.officeNumber);
+                return new Manager(teamMember.name, teamMember.eid, teamMember.email, teamMember.officeNumber);
             case "Engineer":
-                return new Engineer(teamMember.name, teamMember.email, teamMember.id, teamMember.github);
+                return new Engineer(teamMember.name, teamMember.eid, teamMember.email, teamMember.github);
             case "Intern":
-                return new Intern(teamMember.name, teamMember.email, teamMember.id, teamMember.school);
+                return new Intern(teamMember.name, teamMember.eid, teamMember.email, teamMember.school);
         }
         return employees;
     });
 
-    // After the user has input all employees desired, call the `render` function (required
-    // above) and pass in an array containing all employee objects; the `render` function will
-    // generate and return a block of HTML including templated divs for each employee!
+    //Assign data into a variable that will then be used to generate the HTML.
     const HTMLdata = render(employees);
-    // After you have your html, you're now ready to create an HTML file using the HTML
-    // returned from the `render` function. Now write it to a file named `team.html` in the
-    // `output` folder. You can use the variable `outputPath` above target this location.
-    await generateHTML("team.html", HTMLdata);
-    console.log("HTML SUCCESSFULLY GENERATED!")
+    await writeToFile(OUTPUT_DIR, outputPath, HTMLdata);
 
-    // HINT: make sure to build out your classes first! Remember that your Manager, Engineer,
-    // and Intern classes should all extend from a class named Employee; see the directions
-    // for further information. Be sure to test out each class and verify it generates an 
-    // object with the correct structure and methods. This structure will be crucial in order
-    // for the provided `render` function to work!
+    console.log("HTML SUCCESSFULLY GENERATED!")
 }
 
 init();
